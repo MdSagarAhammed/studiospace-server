@@ -10,7 +10,7 @@ import { CLIENT_URLS, getBetterAuthUrl } from "../config/env.js";
  * - MongoDB adapter persists user/session/account/verification collections
  * - Email & password enabled (no email verification / forgot-password per spec)
  * - Google-only social login
- * - Cookie sessions; the jwt() plugin additionally exposes /api/auth/token
+ * - Cookie sessions; the jwt() plugin additionally exposes /api/backend/auth/token
  *
  * onAPIError.errorURL sends failed OAuth callbacks (state mismatch, invalid
  * code, etc.) back to the frontend login page instead of leaving the user on

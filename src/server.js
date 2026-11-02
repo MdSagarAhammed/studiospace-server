@@ -8,7 +8,7 @@ async function main() {
   await initializeBackend();
   const server = app.listen(PORT, () => {
     console.log(`✔ StudioSpace API listening on http://localhost:${PORT}`);
-    console.log(`   Auth:  http://localhost:${PORT}/api/auth`);
+    console.log(`   Auth:  http://localhost:${PORT}/api/backend/auth`);
     console.log(`   CORS:  ${CLIENT_URLS.join(", ")}`);
   });
 

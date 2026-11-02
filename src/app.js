@@ -47,8 +47,8 @@ export function createApp() {
     initializeBackend().then(() => next(), next);
   });
 
-  // BetterAuth mounted at /api/auth (frontend browser fetches go here)
-  app.use("/api/auth", (req, res, next) => {
+  // Keep this mount path aligned with BETTER_AUTH_URL and the frontend proxy.
+  app.use("/api/backend/auth", (req, res, next) => {
     if (!context.auth) {
       return res.status(503).json({ message: "Auth service is starting, try again" });
     }
