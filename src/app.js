@@ -1,15 +1,37 @@
 import express from "express";
 import cors from "cors";
+import "dotenv/config";
 import { toNodeHandler } from "better-auth/node";
+import { connectDB } from "./config/db.js";
+import { initAuth } from "./lib/auth.js";
 import { context } from "./server-context.js";
 import studioRoutes from "./routes/studioRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import { notFoundHandler, errorHandler } from "./middlewares/errorHandler.js";
 
+let initializationPromise;
+
 const CLIENT_URLS = (process.env.CLIENT_URL || "http://localhost:3000")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
+
+export function initializeBackend() {
+  if (context.auth) return Promise.resolve();
+  if (!initializationPromise) {
+    initializationPromise = (async () => {
+      const uri = process.env.MONGODB_URI;
+      if (!uri) throw new Error("MONGODB_URI is required");
+
+      const db = await connectDB(uri);
+      context.auth = initAuth(db);
+    })().catch((error) => {
+      initializationPromise = undefined;
+      throw error;
+    });
+  }
+  return initializationPromise;
+}
 
 export function createApp() {
   const app = express();
@@ -24,6 +46,10 @@ export function createApp() {
       credentials: true,
     })
   );
+
+  app.use((req, res, next) => {
+    initializeBackend().then(() => next(), next);
+  });
 
   // BetterAuth mounted at /api/auth (frontend browser fetches go here)
   app.use("/api/auth", (req, res, next) => {
@@ -47,4 +73,7 @@ export function createApp() {
 
   return app;
 }
+
+const app = createApp();
+export default app;
  
