@@ -24,6 +24,10 @@ export function initAuth(db) {
           google: {
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            // The login button must only authenticate existing accounts.
+            // The registration button opts in to creating a Google account.
+            disableImplicitSignUp: true,
+            requireEmailVerification: true,
           },
         }
       : {};
@@ -48,6 +52,8 @@ export function initAuth(db) {
 
     emailAndPassword: {
       enabled: true,
+      // Registration UI asks users to log in after account creation.
+      autoSignIn: false,
       minPasswordLength: 6,
       maxPasswordLength: 128,
     },

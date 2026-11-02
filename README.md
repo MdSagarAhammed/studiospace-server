@@ -41,16 +41,19 @@ first-party. Add the proxied callback URL to Google OAuth as
 
 ## Auth (BetterAuth)
 
-Mounted at **`/api/auth`** via `toNodeHandler`. Uses the **MongoDB adapter**
+Mounted at **`/api/backend/auth`** via `toNodeHandler`, matching the frontend
+same-origin proxy and production `BETTER_AUTH_URL`. Uses the **MongoDB adapter**
 (collections: `user`, `session`, `account`, `verification`) and cookie sessions
 sent with `credentials: "include"` from the frontend.
 
-- `POST /api/auth/sign-up/email` · `POST /api/auth/sign-in/email` — email & password
-  (no email verification / forgot-password, per spec)
-- `POST /api/auth/sign-in/social` — Google-only social login
-- `GET /api/auth/get-session` — current session/user
-- `POST /api/auth/sign-out` — logout
-- `GET /api/auth/token` — JWT via the `jwt()` plugin (bearer-token clients)
+- `POST /api/backend/auth/sign-up/email` · `POST /api/backend/auth/sign-in/email` — email & password
+  (email confirmation and forgot-password email delivery are not configured)
+- `POST /api/backend/auth/sign-in/social` — Google-only social login
+- `GET /api/backend/auth/get-session` — current session/user
+- `POST /api/backend/auth/sign-out` — logout
+- `GET /api/backend/auth/token` — JWT via the `jwt()` plugin (bearer-token clients)
+- Google sign-up is explicitly requested from the registration page; Google sign-in
+  does not create new accounts and requires Google's email-verified claim.
 - `BetterAuth` handler defined in `src/lib/auth.js`
 
 ## REST API
