@@ -2,11 +2,7 @@ import "dotenv/config";
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { jwt } from "better-auth/plugins";
-
-const CLIENT_URLS = (process.env.CLIENT_URL || "http://localhost:3000")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
+import { CLIENT_URLS, getBetterAuthUrl } from "../config/env.js";
 
 /**
  * Builds the BetterAuth instance once the Mongoose connection is live.
@@ -35,7 +31,7 @@ export function initAuth(db) {
   return betterAuth({
     database: mongodbAdapter(db),
 
-    baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5010",
+    baseURL: getBetterAuthUrl(),
     trustedOrigins: CLIENT_URLS,
 
     // Browser requests reach the API through a same-origin frontend proxy.

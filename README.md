@@ -10,7 +10,7 @@ peer-to-peer studio marketplace.
 ```bash
 npm install
 cp .env.example .env      # fill in MONGODB_URI + secrets
-npm run dev               # nodemon on http://localhost:5000
+npm run dev               # nodemon on http://localhost:5010
 ```
 
 Optional: seed 6 sample studios so the frontend's featured section has data:
@@ -26,7 +26,7 @@ npm run seed
 | `PORT` | Server port (default `5010`; `5000` collides with macOS AirPlay) |
 | `CLIENT_URL` | Comma-separated allowed frontend origins (CORS + BetterAuth trusted origins) |
 | `MONGODB_URI` | Atlas or local MongoDB connection string |
-| `BETTER_AUTH_URL` | Public base URL of this API (`http://localhost:5000`) |
+| `BETTER_AUTH_URL` | Local backend origin; in production, frontend proxy URL ending in `/api/backend/auth` |
 | `BETTER_AUTH_SECRET` | BetterAuth cryptographic secret |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials (only provider) |
 
@@ -93,11 +93,10 @@ Created via Mongoose schema config: `studios(category, ownerEmail, createdAt)`,
 
 ## Integrating with the frontend
 
-Frontend `.env.local`:
+Frontend `.env.local` (the API URL is configured as the proxy target):
 
 ```
-NEXT_PUBLIC_API_BASE_URL=http://localhost:5010/api
-NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:5010/api/auth
+BACKEND_ORIGIN=http://localhost:5010
 ```
 
 Google OAuth console: add redirect `http://localhost:5010/api/auth/callback/google`

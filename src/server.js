@@ -1,5 +1,6 @@
 import "dotenv/config";
 import app, { initializeBackend } from "./app.js";
+import { CLIENT_URLS } from "./config/env.js";
 
 const PORT = process.env.PORT || 5010;
 
@@ -8,7 +9,7 @@ async function main() {
   const server = app.listen(PORT, () => {
     console.log(`✔ StudioSpace API listening on http://localhost:${PORT}`);
     console.log(`   Auth:  http://localhost:${PORT}/api/auth`);
-    console.log(`   CORS:  ${(process.env.CLIENT_URL || "http://localhost:3000")}`);
+    console.log(`   CORS:  ${CLIENT_URLS.join(", ")}`);
   });
 
   // Graceful shutdown

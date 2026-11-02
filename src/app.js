@@ -5,23 +5,19 @@ import { toNodeHandler } from "better-auth/node";
 import { connectDB } from "./config/db.js";
 import { initAuth } from "./lib/auth.js";
 import { context } from "./server-context.js";
+import { CLIENT_URLS, validateBackendEnvironment } from "./config/env.js";
 import studioRoutes from "./routes/studioRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import { notFoundHandler, errorHandler } from "./middlewares/errorHandler.js";
 
 let initializationPromise;
 
-const CLIENT_URLS = (process.env.CLIENT_URL || "http://localhost:3000")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
-
 export function initializeBackend() {
   if (context.auth) return Promise.resolve();
   if (!initializationPromise) {
     initializationPromise = (async () => {
+      validateBackendEnvironment();
       const uri = process.env.MONGODB_URI;
-      if (!uri) throw new Error("MONGODB_URI is required");
 
       const db = await connectDB(uri);
       context.auth = initAuth(db);
@@ -40,7 +36,7 @@ export function createApp() {
   app.use(
     cors({
       origin: (origin, cb) => {
-        if (!origin || CLIENT_URLS.includes(origin) || /\.vercel\.app$/.test(origin)) return cb(null, true);
+        if (!origin || CLIENT_URLS.includes(origin)) return cb(null, true);
         return cb(new Error("Not allowed by CORS"));
       },
       credentials: true,
