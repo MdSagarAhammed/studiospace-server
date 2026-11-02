@@ -53,7 +53,8 @@ sent with `credentials: "include"` from the frontend.
 - `POST /api/backend/auth/sign-out` — logout
 - `GET /api/backend/auth/token` — JWT via the `jwt()` plugin (bearer-token clients)
 - Google sign-up is explicitly requested from the registration page; Google sign-in
-  does not create new accounts and requires Google's email-verified claim.
+  does not create new accounts. Better Auth records Google's email-verification
+  claim on the user profile; Google OAuth itself authenticates the user.
 - `BetterAuth` handler defined in `src/lib/auth.js`
 
 ## REST API

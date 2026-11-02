@@ -27,7 +27,6 @@ export function initAuth(db) {
             // The login button must only authenticate existing accounts.
             // The registration button opts in to creating a Google account.
             disableImplicitSignUp: true,
-            requireEmailVerification: true,
           },
         }
       : {};
