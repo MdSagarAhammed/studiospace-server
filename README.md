@@ -55,6 +55,8 @@ sent with `credentials: "include"` from the frontend.
 - Google sign-up is explicitly requested from the registration page; Google sign-in
   does not create new accounts. Better Auth records Google's email-verification
   claim on the user profile; Google OAuth itself authenticates the user.
+- Google is an explicitly trusted account-linking provider. Existing local email
+  accounts still need a verified email before Better Auth will implicitly link them.
 - `BetterAuth` handler defined in `src/lib/auth.js`
 
 ## REST API

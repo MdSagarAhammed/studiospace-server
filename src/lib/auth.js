@@ -36,6 +36,15 @@ export function initAuth(db) {
 
     baseURL: getBetterAuthUrl(),
     trustedOrigins: CLIENT_URLS,
+    account: {
+      accountLinking: {
+        enabled: true,
+        // Google is an approved identity provider for account linking.
+        // Keep Better Auth's default requirement that an existing local
+        // account's email is verified before an implicit same-email link.
+        trustedProviders: ["google"],
+      },
+    },
 
     // Browser requests reach the API through a same-origin frontend proxy.
     // Keep cookies secure in production HTTPS while allowing local HTTP dev.
