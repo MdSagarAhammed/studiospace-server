@@ -30,6 +30,15 @@ npm run seed
 | `BETTER_AUTH_SECRET` | BetterAuth cryptographic secret |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials (only provider) |
 
+For deployment behind the frontend's same-origin API proxy, set
+`BETTER_AUTH_URL` to the public frontend auth proxy URL (for example,
+`https://example.com/api/backend/auth`), and set `CLIENT_URL` to the exact
+public frontend origin (for example, `https://example.com`, with no path). Set
+`BETTER_AUTH_SECRET` to the same long-lived secret on every backend instance.
+The frontend server proxies browser traffic to the API so session cookies stay
+first-party. Add the proxied callback URL to Google OAuth as
+`https://example.com/api/backend/auth/callback/google`.
+
 ## Auth (BetterAuth)
 
 Mounted at **`/api/auth`** via `toNodeHandler`. Uses the **MongoDB adapter**

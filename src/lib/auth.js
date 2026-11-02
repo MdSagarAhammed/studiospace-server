@@ -21,6 +21,7 @@ const CLIENT_URLS = (process.env.CLIENT_URL || "http://localhost:3000")
  * a bare API error page.
  */
 export function initAuth(db) {
+  const isProduction = process.env.NODE_ENV === "production";
   const socialProviders =
     process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? {
@@ -36,6 +37,14 @@ export function initAuth(db) {
 
     baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5010",
     trustedOrigins: CLIENT_URLS,
+
+    // Browser requests reach the API through a same-origin frontend proxy.
+    // Keep cookies secure in production HTTPS while allowing local HTTP dev.
+    advanced: {
+      defaultCookieAttributes: isProduction
+        ? { sameSite: "lax", secure: true }
+        : { sameSite: "lax", secure: false },
+    },
 
     onAPIError: {
       errorURL: `${CLIENT_URLS[0] || "http://localhost:3000"}/login`,
