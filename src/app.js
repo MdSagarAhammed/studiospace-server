@@ -47,3 +47,4 @@ export function createApp() {
 
   return app;
 }
+ export default app
