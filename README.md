@@ -3,7 +3,7 @@
 Express + MongoDB REST API and BetterAuth server for the StudioSpace
 peer-to-peer studio marketplace.
 
-**Stack:** Express 5 · MongoDB (Mongoose) · BetterAuth 1.7 (MongoDB adapter, cookie sessions, JWT plugin, Google provider)
+**Stack:** Express 5 · MongoDB (native driver) · BetterAuth 1.7 (MongoDB adapter, cookie sessions, JWT plugin, Google provider)
 
 ## Getting started
 
@@ -59,6 +59,17 @@ sent with `credentials: "include"` from the frontend.
   accounts still need a verified email before Better Auth will implicitly link them.
 - `BetterAuth` handler defined in `src/lib/auth.js`
 
+If Google OAuth logs `OAuth account references a missing user`, use the guarded
+repair command against the same MongoDB database as the deployed backend. It
+only targets Google account rows whose referenced user row is missing:
+
+```bash
+npm run auth:repair-google-orphans           # dry run
+npm run auth:repair-google-orphans -- --apply # delete only those orphan rows
+```
+
+Confirm `MONGODB_URI` points to the intended database before using `--apply`.
+
 ## REST API
 
 All responses follow `{ success: boolean, data: ... }`. Errors: `{ success: false, message }`.
@@ -94,7 +105,7 @@ npm run test:unit  # booking date/time and overlap validation
 
 ## Suggested MongoDB indexes
 
-Created via Mongoose schema config: `studios(category, ownerEmail, createdAt)`,
+Created via index() setup: `studios(category, ownerEmail, createdAt)`,
 `bookings(user, studio)`.
 
 ## Integrating with the frontend

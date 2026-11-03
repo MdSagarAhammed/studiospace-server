@@ -1,39 +1,47 @@
-import mongoose from "mongoose";
+import { ObjectId } from "mongodb";
+import { getDB } from "../config/db.js";
 
-const studioSchema = new mongoose.Schema(
-  {
-    title: { type: String, required: true, trim: true },
-    category: {
-      type: String,
-      required: true,
-      enum: ["Photo Studio", "Film Stage", "Podcast Lounge", "Music Suite", "Workshop"],
-    },
-    hourlyRate: { type: Number, required: true, min: 0 },
-    securityDeposit: { type: Number, default: 0, min: 0 },
-    maxCapacity: { type: Number, required: true, min: 1 },
-    location: { type: String, required: true, trim: true },
-    images: { type: [String], default: [] },
-    amenities: { type: [String], default: [] },
-    overview: { type: String, required: true, trim: true },
-    owner: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
-    ownerName: { type: String, required: true },
-    ownerEmail: { type: String, required: true, lowercase: true },
-    rating: { type: Number, default: 0, min: 0, max: 5 },
-    reviewsCount: { type: Number, default: 0 },
-    reviews: [
-      {
-        user: String,
-        rating: { type: Number, min: 1, max: 5 },
-        comment: String,
-        createdAt: { type: Date, default: Date.now },
-      },
-    ],
-  },
-  { timestamps: true, collection: "studios" }
-);
+/**
+ * Plain-MongoDB access to the studios collection (replaces the former
+ * Mongoose model with simple CRUD + query operators).
+ */
 
-studioSchema.index({ category: 1 });
-studioSchema.index({ ownerEmail: 1 });
-studioSchema.index({ createdAt: -1 });
+/** Collection accessor. */
+export const studios = () => getDB().collection("studios");
 
-export const Studio = mongoose.model("Studio", studioSchema);
+/** Category values allowed on the field, same list the frontend offers. */
+export const STUDIO_CATEGORIES = [
+  "Photo Studio",
+  "Film Stage",
+  "Podcast Lounge",
+  "Music Suite",
+  "Workshop",
+];
+
+/** Fields returned for list views (former .select(LIST_FIELDS)). */
+export const STUDIO_LIST_FIELDS = {
+  title: 1,
+  category: 1,
+  hourlyRate: 1,
+  location: 1,
+  images: 1,
+  rating: 1,
+  reviewsCount: 1,
+  createdAt: 1,
+};
+
+/** Fields attached to a booking's hydrated studio summary. */
+export const STUDIO_BOOKING_FIELDS = {
+  title: 1,
+  images: 1,
+  location: 1,
+  hourlyRate: 1,
+};
+
+/** Cast a 24-hex id string to an ObjectId; null when malformed. */
+export function castObjectId(id) {
+  if (id instanceof ObjectId) return id;
+  return typeof id === "string" && /^[0-9a-f]{24}$/i.test(id)
+    ? new ObjectId(id)
+    : null;
+}

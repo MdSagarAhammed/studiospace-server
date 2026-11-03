@@ -9,6 +9,7 @@
     "dev": "nodemon --watch src --watch .env src/server.js",
     "start": "node src/server.js",
     "seed": "node src/config/seed.js",
+    "auth:repair-google-orphans": "node scripts/repair-orphan-google-accounts.mjs",
     "test": "node scripts/e2e.mjs",
     "test:unit": "node --test scripts/*.test.mjs",
     "check": "node --check src/server.js && node --check src/app.js"
@@ -18,7 +19,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.0.0",
     "express": "^5.3.0",
-    "mongoose": "^9.11.4"
+    "mongodb": "^7.7.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.0"

@@ -1,27 +1,15 @@
-import mongoose from "mongoose";
+import { getDB } from "../config/db.js";
 
-const bookingSchema = new mongoose.Schema(
-  {
-    studio: { type: mongoose.Schema.Types.ObjectId, ref: "Studio", required: true },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true },
-    bookerName: { type: String, required: true },
-    bookerEmail: { type: String, required: true, lowercase: true },
-    date: { type: String, required: true }, // YYYY-MM-DD (frontend contract)
-    startTime: { type: String, default: "10:00" },
-    hours: { type: Number, required: true, min: 1 },
-    // Snapshot of pricing at booking time — stays stable if the studio rate changes
-    hourlyRate: { type: Number, required: true, min: 0 },
-    totalPrice: { type: Number, required: true, min: 0 },
-    status: {
-      type: String,
-      enum: ["Pending", "Confirmed", "Completed", "Cancelled"],
-      default: "Pending",
-    },
-  },
-  { timestamps: true, collection: "bookings" }
-);
+/**
+ * Plain-MongoDB access to the bookings collection (replaces the former
+ * Mongoose model with simple CRUD + query operators).
+ */
 
-bookingSchema.index({ user: 1, status: 1 });
-bookingSchema.index({ studio: 1 });
+/** Collection accessor. */
+export const bookings = () => getDB().collection("bookings");
 
-export const Booking = mongoose.model("Booking", bookingSchema);
+/** Status values allowed on the field. */
+export const BOOKING_STATUSES = ["Pending", "Confirmed", "Completed", "Cancelled"];
+
+/** Fields needed to check time-slot conflicts with existing bookings. */
+export const BOOKING_SLOT_FIELDS = { date: 1, startTime: 1, hours: 1 };

@@ -1,6 +1,6 @@
 import "dotenv/config";
-import { connectDB } from "./db.js";
-import { Studio } from "../models/Studio.js";
+import { connectDB, closeDB } from "./db.js";
+import { studios } from "../models/Studio.js";
 
 const HOST = { ownerName: "StudioSpace Demo Host", ownerEmail: "host@studiospace.dev" };
 
@@ -125,16 +125,23 @@ const SAMPLES = [
 ];
 
 async function seed() {
-  const seedDb = await connectDB(process.env.MONGODB_URI);
-  const existing = await Studio.countDocuments({ ownerEmail: HOST.ownerEmail });
+  await connectDB(process.env.MONGODB_URI);
+  const existing = await studios().countDocuments({ ownerEmail: HOST.ownerEmail });
   if (existing > 0) {
     console.log(`ℹ ${existing} sample studios already exist — skipping seed (user-created listings are left untouched).`);
-    await seedDb.close();
+    await closeDB();
     return;
   }
-  await Studio.insertMany(SAMPLES);
-  console.log(`✔ Seeded ${SAMPLES.length} sample studios (owner ${HOST.ownerEmail}).`);
-  await seedDb.close();
+  // Timestamp every doc and review, mirroring the previous model's defaults.
+  const docs = SAMPLES.map((sample) => ({
+    ...sample,
+    reviews: sample.reviews?.map((review) => ({ ...review, createdAt: new Date() })) ?? [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }));
+  await studios().insertMany(docs);
+  console.log(`✔ Seeded ${docs.length} sample studios (owner ${HOST.ownerEmail}).`);
+  await closeDB();
 }
 
 seed().catch((err) => {

@@ -5,7 +5,7 @@ import { jwt } from "better-auth/plugins";
 import { CLIENT_URLS, getBetterAuthUrl } from "../config/env.js";
 
 /**
- * Builds the BetterAuth instance once the Mongoose connection is live.
+ * Builds the BetterAuth instance once the MongoDB connection is live.
  *
  * - MongoDB adapter persists user/session/account/verification collections
  * - Email & password enabled (no email verification / forgot-password per spec)
@@ -37,6 +37,9 @@ export function initAuth(db) {
     baseURL: getBetterAuthUrl(),
     trustedOrigins: CLIENT_URLS,
     account: {
+      // OAuth begins and returns through the frontend proxy. Keep its short-
+      // lived state with the browser flow instead of a MongoDB verification row.
+      storeStateStrategy: "cookie",
       accountLinking: {
         enabled: true,
         // Google is an approved identity provider for account linking.

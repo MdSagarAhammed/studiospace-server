@@ -1,6 +1,6 @@
-import { Booking } from "../models/Booking.js";
-import { Studio } from "../models/Studio.js";
-import {
+import { ObjectId } from "mongodb";
+import { bookings, BOOKING_SLOT_FIELDS } from "../models/Booking.js";
+import { studios, castObjectId } from "../models/Studio.js";import {
   bookingDateRange,
   bookingIntervalsOverlap,
   parseBookingStart,
@@ -8,6 +8,7 @@ import {
 
 const handle = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const HOUR_IN_MS = 60 * 60 * 1000;
+const now = () => new Date();
 
 // POST /api/bookings — creates a reservation with status "Pending"
 export const createBooking = handle(async (req, res) => {
@@ -43,20 +44,24 @@ export const createBooking = handle(async (req, res) => {
     });
   }
 
-  const studio = await Studio.findById(studioId);
+  const _id = castObjectId(studioId);
+  const studio = _id ? await studios().findOne({ _id }) : null;
   if (!studio) {
     return res.status(404).json({ success: false, message: "Studio not found" });
   }
 
   const end = start + hoursNum * HOUR_IN_MS;
   const { from, through } = bookingDateRange(start, end);
-  const existingBookings = await Booking.find({
-    studio: studio._id,
-    status: { $in: ["Pending", "Confirmed"] },
-    date: { $gte: from, $lte: through },
-  })
-    .select("date startTime hours")
-    .lean();
+  const existingBookings = await bookings()
+    .find(
+      {
+        studio: studio._id,
+        status: { $in: ["Pending", "Confirmed"] },
+        date: { $gte: from, $lte: through },
+      },
+      { projection: BOOKING_SLOT_FIELDS }
+    )
+    .toArray();
 
   const hasConflict = existingBookings.some((booking) => {
     const existingStart = parseBookingStart(booking.date, booking.startTime);
@@ -80,34 +85,56 @@ export const createBooking = handle(async (req, res) => {
   // Server-side pricing from the studio's current rate
   const rate = Number(studio.hourlyRate);
 
-  const booking = await Booking.create({
+  const user = castObjectId(req.user.id);
+  if (!user) {
+    return res.status(400).json({ success: false, message: "Malformed session user id" });
+  }
+
+  const doc = {
     studio: studio._id,
-    user: req.user.id,
+    user,
     bookerName: req.user.name,
-    bookerEmail: req.user.email,
+    bookerEmail: (req.user.email || "").toLowerCase(),
     date,
     startTime,
     hours: hoursNum,
     hourlyRate: rate,
     totalPrice: rate * hoursNum,
     status: "Pending",
-  });
+    createdAt: now(),
+    updatedAt: now(),
+  };
+  const inserted = await bookings().insertOne(doc);
+  const booking = { ...doc, _id: inserted.insertedId };
 
   res.status(201).json({ success: true, data: booking });
 });
 
 // GET /api/bookings/mine — session user's reservations with studio summary
 export const getMyBookings = handle(async (req, res) => {
-  const data = await Booking.find({ user: req.user.id })
-    .sort({ createdAt: -1 })
-    .populate("studio", "title images location hourlyRate")
-    .lean();
+  const user = castObjectId(req.user.id);
+  const rows = await bookings()
+    .find({ user }, { sort: { createdAt: -1 } })
+    .toArray();
+  if (rows.length === 0) {
+    return res.json({ success: true, data: [] });
+  }
+
+  // Hydrate each booking's studio summary (former .populate("studio", ...)).
+  const studioIds = [...new Set(rows.map((row) => new ObjectId(row.studio)))];
+  const summaries = await studios()
+    .find({ _id: { $in: studioIds } }, { projection: { title: 1, images: 1, location: 1, hourlyRate: 1 } })
+    .toArray();
+  const byId = new Map(summaries.map((studio) => [String(studio._id), studio]));
+  const data = rows.map((row) => ({ ...row, studio: byId.get(String(row.studio)) ?? row.studio }));
+
   res.json({ success: true, data });
 });
 
 // PATCH /api/bookings/:id/cancel — only pending, only your own
 export const cancelBooking = handle(async (req, res) => {
-  const booking = await Booking.findById(req.params.id);
+  const _id = castObjectId(req.params.id);
+  const booking = _id ? await bookings().findOne({ _id }) : null;
   if (!booking) {
     return res.status(404).json({ success: false, message: "Booking not found" });
   }
@@ -120,7 +147,13 @@ export const cancelBooking = handle(async (req, res) => {
       message: `Only Pending bookings can be cancelled (current status: ${booking.status})`,
     });
   }
-  booking.status = "Cancelled";
-  await booking.save();
-  res.json({ success: true, data: booking });
+  const updated = await bookings().findOneAndUpdate(
+    { _id, status: "Pending" },
+    { $set: { status: "Cancelled", updatedAt: now() } },
+    { returnDocument: "after" }
+  );
+  if (!updated) {
+    return res.status(404).json({ success: false, message: "Booking not found" });
+  }
+  res.json({ success: true, data: updated });
 });
