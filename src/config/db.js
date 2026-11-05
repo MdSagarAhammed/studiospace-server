@@ -3,7 +3,6 @@ import { MongoClient } from "mongodb";
 let client = null;
 let db = null;
 
-/** Connect to MongoDB once, reuse the same connection across requests. */
 export async function connectDB(uri) {
   if (db) return db;
   client = new MongoClient(uri);
@@ -14,7 +13,6 @@ export async function connectDB(uri) {
   return db;
 }
 
-/** Idempotent indexes previously auto-created by the Mongoose schemas. */
 async function ensureIndexes(db) {
   await db.collection("studios").createIndexes([
     { key: { category: 1 } },
@@ -27,12 +25,10 @@ async function ensureIndexes(db) {
   ]);
 }
 
-/** The connected native database; undefined until connectDB has resolved. */
 export function getDB() {
   return db;
 }
 
-/** Close the connection — used by standalone scripts (seed, repair). */
 export async function closeDB() {
   if (client) await client.close();
   client = null;

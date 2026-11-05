@@ -10,7 +10,6 @@ const handle = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).c
 const HOUR_IN_MS = 60 * 60 * 1000;
 const now = () => new Date();
 
-// POST /api/bookings — creates a reservation with status "Pending"
 export const createBooking = handle(async (req, res) => {
   const { studioId, date, startTime = "10:00", hours } = req.body || {};
 
@@ -82,7 +81,6 @@ export const createBooking = handle(async (req, res) => {
     });
   }
 
-  // Server-side pricing from the studio's current rate
   const rate = Number(studio.hourlyRate);
 
   const user = castObjectId(req.user.id);
@@ -110,7 +108,6 @@ export const createBooking = handle(async (req, res) => {
   res.status(201).json({ success: true, data: booking });
 });
 
-// GET /api/bookings/mine — session user's reservations with studio summary
 export const getMyBookings = handle(async (req, res) => {
   const user = castObjectId(req.user.id);
   const rows = await bookings()
@@ -120,7 +117,6 @@ export const getMyBookings = handle(async (req, res) => {
     return res.json({ success: true, data: [] });
   }
 
-  // Hydrate each booking's studio summary (former .populate("studio", ...)).
   const studioIds = [...new Set(rows.map((row) => new ObjectId(row.studio)))];
   const summaries = await studios()
     .find({ _id: { $in: studioIds } }, { projection: { title: 1, images: 1, location: 1, hourlyRate: 1 } })
@@ -131,7 +127,6 @@ export const getMyBookings = handle(async (req, res) => {
   res.json({ success: true, data });
 });
 
-// PATCH /api/bookings/:id/cancel — only pending, only your own
 export const cancelBooking = handle(async (req, res) => {
   const _id = castObjectId(req.params.id);
   const booking = _id ? await bookings().findOne({ _id }) : null;

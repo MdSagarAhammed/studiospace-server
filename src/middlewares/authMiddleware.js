@@ -1,9 +1,5 @@
 import { context } from "../server-context.js";
 
-/**
- * Requires a valid BetterAuth session (cookie or bearer token).
- * On success, req.user = { id, name, email, image }.
- */
 export async function requireAuth(req, res, next) {
   const session = await context.auth.api.getSession({ headers: req.headers });
   if (!session?.user) {

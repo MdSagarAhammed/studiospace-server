@@ -1,4 +1,3 @@
-/** True when the studio document belongs to the requesting user. */
 export function isOwner(doc, user) {
   if (!doc || !user) return false;
   if (doc.ownerEmail && doc.ownerEmail === user.email) return true;

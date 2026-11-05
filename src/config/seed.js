@@ -132,7 +132,6 @@ async function seed() {
     await closeDB();
     return;
   }
-  // Timestamp every doc and review, mirroring the previous model's defaults.
   const docs = SAMPLES.map((sample) => ({
     ...sample,
     reviews: sample.reviews?.map((review) => ({ ...review, createdAt: new Date() })) ?? [],

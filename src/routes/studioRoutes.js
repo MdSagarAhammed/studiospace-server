@@ -12,13 +12,11 @@ import {
 
 const router = Router();
 
-// Public
 router.get("/", listStudios);
 router.get("/featured", getFeatured);
-router.get("/mine", requireAuth, getMine); // must precede /:id
+router.get("/mine", requireAuth, getMine); 
 router.get("/:id", getStudio);
 
-// Private
 router.post("/", requireAuth, createStudio);
 router.put("/:id", requireAuth, updateStudio);
 router.patch("/:id", requireAuth, updateStudio);

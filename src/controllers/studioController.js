@@ -9,7 +9,6 @@ import { isOwner } from "../middlewares/ownershipMiddleware.js";
 const handle = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const now = () => new Date();
 
-/** Normalizes a studio payload from the client, ignoring spoofed ownership fields. */
 function buildPayload(body, user) {
   return {
     title: body.title?.trim(),
@@ -27,7 +26,6 @@ function buildPayload(body, user) {
   };
 }
 
-/** The numbers the field must carry (former schema min/max rules). */
 function invalidNumbers(payload) {
   return (
     Number.isNaN(payload.hourlyRate) ||
@@ -39,7 +37,6 @@ function invalidNumbers(payload) {
   );
 }
 
-// GET /api/studios?search=&category=&sort=newest|rating|price-asc|price-desc
 export const listStudios = handle(async (req, res) => {
   const { search, category, sort = "newest" } = req.query;
 
@@ -67,7 +64,6 @@ export const listStudios = handle(async (req, res) => {
   res.json({ success: true, data });
 });
 
-// GET /api/studios/featured — top-rated, newest tie-break, limit 6
 export const getFeatured = handle(async (_req, res) => {
   const data = await studios()
     .find({}, { projection: STUDIO_LIST_FIELDS, sort: { rating: -1, createdAt: -1 }, limit: 6 })
@@ -75,7 +71,6 @@ export const getFeatured = handle(async (_req, res) => {
   res.json({ success: true, data });
 });
 
-// GET /api/studios/mine — listings owned by the session user
 export const getMine = handle(async (req, res) => {
   const data = await studios()
     .find({ ownerEmail: (req.user.email || "").toLowerCase() }, { sort: { createdAt: -1 } })
@@ -83,7 +78,6 @@ export const getMine = handle(async (req, res) => {
   res.json({ success: true, data });
 });
 
-// GET /api/studios/:id
 export const getStudio = handle(async (req, res) => {
   const _id = castObjectId(req.params.id);
   const studio = _id ? await studios().findOne({ _id }) : null;
@@ -93,7 +87,6 @@ export const getStudio = handle(async (req, res) => {
   res.json({ success: true, data: studio });
 });
 
-// POST /api/studios (private)
 export const createStudio = handle(async (req, res) => {
   const payload = buildPayload(req.body, req.user);
   if (!payload.title || !payload.category || !payload.overview || !payload.location || invalidNumbers(payload)) {
@@ -116,7 +109,6 @@ export const createStudio = handle(async (req, res) => {
   res.status(201).json({ success: true, data: { ...doc, _id: inserted.insertedId } });
 });
 
-/** Key-value pairs the client may update; owner fields are never taken from the request. */
 function buildUpdateSet(body) {
   const b = body;
   const $set = {};
@@ -132,7 +124,6 @@ function buildUpdateSet(body) {
   return $set;
 }
 
-// PUT /api/studios/:id (private, ownership enforced)
 export const updateStudio = handle(async (req, res) => {
   const _id = castObjectId(req.params.id);
   const studio = _id ? await studios().findOne({ _id }) : null;
@@ -157,7 +148,6 @@ export const updateStudio = handle(async (req, res) => {
   res.json({ success: true, data: updated });
 });
 
-// DELETE /api/studios/:id (private, ownership enforced)
 export const deleteStudio = handle(async (req, res) => {
   const _id = castObjectId(req.params.id);
   const studio = _id ? await studios().findOne({ _id }) : null;

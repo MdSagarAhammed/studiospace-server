@@ -32,7 +32,6 @@ export function initializeBackend() {
 export function createApp() {
   const app = express();
 
-  // CORS with credentials — the frontend sends its session cookie
   app.use(
     cors({
       origin: (origin, cb) => {
@@ -47,7 +46,6 @@ export function createApp() {
     initializeBackend().then(() => next(), next);
   });
 
-  // Keep this mount path aligned with BETTER_AUTH_URL and the frontend proxy.
   app.use("/api/backend/auth", (req, res, next) => {
     if (!context.auth) {
       return res.status(503).json({ message: "Auth service is starting, try again" });

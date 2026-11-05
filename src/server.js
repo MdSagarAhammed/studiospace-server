@@ -12,7 +12,6 @@ async function main() {
     console.log(`   CORS:  ${CLIENT_URLS.join(", ")}`);
   });
 
-  // Graceful shutdown
   for (const sig of ["SIGINT", "SIGTERM"]) {
     process.on(sig, () => {
       console.log(`\n${sig} received — shutting down…`);
