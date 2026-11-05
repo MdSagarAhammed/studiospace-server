@@ -1,121 +1,109 @@
-# StudioSpace — Backend
+# StudioSpace — Backend API
 
-Express + MongoDB REST API and BetterAuth server for the StudioSpace
-peer-to-peer studio marketplace.
+**Powering the Creative Workspace Marketplace**
 
-**Stack:** Express 5 · MongoDB (native driver) · BetterAuth 1.7 (MongoDB adapter, cookie sessions, JWT plugin, Google provider)
+The StudioSpace backend provides RESTful APIs for managing studio listings, user authentication, reservations, and database operations. It uses Express.js and MongoDB to deliver a scalable and secure backend infrastructure.
 
-## Getting started
+🌐 **Live API URL:** https://studiospace-server-4baa.onrender.com
+
+## ✨ Key Features
+
+- **Studio Management API:** Create, retrieve, update, and delete studio listings.
+- **Booking Management:** Create reservations, retrieve booking records, and manage booking statuses.
+- **Secure Authorization:** Protect private API operations using JWT-based authentication and HTTPOnly cookies.
+- **Double-Booking Prevention:** Check existing confirmed reservations to prevent overlapping bookings.
+- **MongoDB Integration:** Store and manage studio listings, bookings, and related application data.
+- **Data Validation:** Validate incoming requests and handle errors with appropriate HTTP status codes.
+- **Protected Operations:** Restrict sensitive operations to authenticated and authorized users.
+
+## 🛠️ Technology Stack
+
+- **Runtime:** Node.js
+- **Framework:** Express.js
+- **Language:** JavaScript
+- **Database:** MongoDB
+- **Authentication:** JWT, HTTPOnly Cookies
+- **Environment Management:** dotenv
+- **API Architecture:** REST API
+- **Deployment:** Render
+
+## 🚀 Local Setup
+
+**1. Clone the repository**
+
+```bash
+git clone https://github.com/MdSagarAhammed/studiospace-server.git
+cd studiospace-server
+```
+
+**2. Install dependencies**
 
 ```bash
 npm install
-cp .env.example .env      # fill in MONGODB_URI + secrets
-npm run dev               # nodemon on http://localhost:5010
 ```
 
-Optional: seed 6 sample studios so the frontend's featured section has data:
+**3. Configure environment variables**
+
+Create a `.env` file in the project root:
+
+```env
+PORT=5000
+CLIENT_URL=http://localhost:3000
+
+MONGODB_URI=
+BETTER_AUTH_URL=http://localhost:5000/api/backend/auth
+BETTER_AUTH_SECRET=get your betterauth secret
+
+
+GOOGLE_CLIENT_ID=get your google client id
+GOOGLE_CLIENT_SECRET=get your google client secret
+
+```
+
+
+**4. Start the development server**
 
 ```bash
-npm run seed
+npm run dev
 ```
 
-## Environment variables
-
-| Variable | Purpose |
-| --- | --- |
-| `PORT` | Server port (default `5010`; `5000` collides with macOS AirPlay) |
-| `CLIENT_URL` | Comma-separated allowed frontend origins (CORS + BetterAuth trusted origins) |
-| `MONGODB_URI` | Atlas or local MongoDB connection string |
-| `BETTER_AUTH_URL` | Local backend origin; in production, frontend proxy URL ending in `/api/backend/auth` |
-| `BETTER_AUTH_SECRET` | BetterAuth cryptographic secret |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials (only provider) |
-
-For deployment behind the frontend's same-origin API proxy, set
-`BETTER_AUTH_URL` to the public frontend auth proxy URL (for example,
-`https://example.com/api/backend/auth`), and set `CLIENT_URL` to the exact
-public frontend origin (for example, `https://example.com`, with no path). Set
-`BETTER_AUTH_SECRET` to the same long-lived secret on every backend instance.
-The frontend server proxies browser traffic to the API so session cookies stay
-first-party. Add the proxied callback URL to Google OAuth as
-`https://example.com/api/backend/auth/callback/google`.
-
-## Auth (BetterAuth)
-
-Mounted at **`/api/backend/auth`** via `toNodeHandler`, matching the frontend
-same-origin proxy and production `BETTER_AUTH_URL`. Uses the **MongoDB adapter**
-(collections: `user`, `session`, `account`, `verification`) and cookie sessions
-sent with `credentials: "include"` from the frontend.
-
-- `POST /api/backend/auth/sign-up/email` · `POST /api/backend/auth/sign-in/email` — email & password
-  (email confirmation and forgot-password email delivery are not configured)
-- `POST /api/backend/auth/sign-in/social` — Google-only social login
-- `GET /api/backend/auth/get-session` — current session/user
-- `POST /api/backend/auth/sign-out` — logout
-- `GET /api/backend/auth/token` — JWT via the `jwt()` plugin (bearer-token clients)
-- Google sign-up is explicitly requested from the registration page; Google sign-in
-  does not create new accounts. Better Auth records Google's email-verification
-  claim on the user profile; Google OAuth itself authenticates the user.
-- Google is an explicitly trusted account-linking provider. Existing local email
-  accounts still need a verified email before Better Auth will implicitly link them.
-- `BetterAuth` handler defined in `src/lib/auth.js`
-
-If Google OAuth logs `OAuth account references a missing user`, use the guarded
-repair command against the same MongoDB database as the deployed backend. It
-only targets Google account rows whose referenced user row is missing:
+For production:
 
 ```bash
-npm run auth:repair-google-orphans           # dry run
-npm run auth:repair-google-orphans -- --apply # delete only those orphan rows
+npm start
 ```
 
-Confirm `MONGODB_URI` points to the intended database before using `--apply`.
+**5. Verify the API**
 
-## REST API
+Visit:
 
-All responses follow `{ success: boolean, data: ... }`. Errors: `{ success: false, message }`.
+```
+http://localhost:5000
+```
 
-### Studios (`/api/studios`)
-
-| Method | Endpoint | Auth | Description |
-| --- | --- | --- | --- |
-| `GET` | `/?search=&category=&sort=` | Public | List w/ title+location search, category filter, sort (`newest`, `rating`, `price-asc`, `price-desc`) |
-| `GET` | `/featured` | Public | Top-rated, newest tie-break, **limit 6** |
-| `GET` | `/mine` | Private | Listings where `ownerEmail` matches the session user |
-| `GET` | `/:id` | Public | Full studio incl. amenities & reviews |
-| `POST` | `/` | Private | Create — `owner/ownerName/ownerEmail` always set **from the session**, never the client body |
-| `PUT` / `PATCH` | `/:id` | Private | Update — 403 unless the listing belongs to you; owner fields read-only |
-| `DELETE` | `/:id` | Private | Delete — 403 unless the listing belongs to you |
-
-### Bookings (`/api/bookings` — all private)
+## 🔗 API Overview
 
 | Method | Endpoint | Description |
-| --- | --- | --- |
-| `POST` | `/` | Create reservation: validates date/time + whole hours (1–24), rejects overlapping pending/confirmed reservations, snapshots price server-side, status **`Pending`** |
-| `GET` | `/mine` | Booking list with populated studio (`title`, `images`, `location`, rate) |
-| `PATCH` | `/:id/cancel` | Only your own bookings, only while `Pending` → sets `Cancelled` |
+|---|---|---|
+| GET | `/api/studios` | Get all studios |
+| GET | `/api/studios/:id` | Get studio details |
+| POST | `/api/studios` | Create a studio |
+| PATCH | `/api/studios/:id` | Update a studio |
+| DELETE | `/api/studios/:id` | Delete a studio |
+| POST | `/api/bookings` | Create a booking |
+| GET | `/api/bookings` | Get bookings |
+| PATCH | `/api/bookings/:id` | Update booking status |
+ 
 
-Statuses: `Pending` → `Confirmed` → `Completed`, or `Cancelled` (owner/host workflow can flip statuses in v2; every status change already validates ownership).
+## 🔒 Security & Validation
 
-### End-to-end test
+- JWT authentication for protected operations.
+- HTTPOnly cookies for secure token storage.
+- Authorization checks for studio ownership and booking operations.
+- Booking collision detection against confirmed reservations.
+- Environment variables for sensitive credentials.
+- Centralized error handling and request validation.
 
-```bash
-npm test   # scripts/e2e.mjs — register → session → studio CRUD → booking lifecycle
-npm run test:unit  # booking date/time and overlap validation
-```
+## 📌 Project Purpose
 
-## Suggested MongoDB indexes
-
-Created via index() setup: `studios(category, ownerEmail, createdAt)`,
-`bookings(user, studio)`.
-
-## Integrating with the frontend
-
-Frontend `.env.local` (the API URL is configured as the proxy target):
-
-```
-BACKEND_ORIGIN=http://localhost:5010
-```
-
-Google OAuth console: add redirect `http://localhost:5010/api/auth/callback/google`
-and authorized origin `http://localhost:3000`.
-> Tip: macOS binds port 5000 to AirPlay, so the API defaults to **5010**.
+The StudioSpace backend powers a peer-to-peer creative workspace marketplace by providing reliable APIs, secure data management, and booking functionality for creators and studio owners.
